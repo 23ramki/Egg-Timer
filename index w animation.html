@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Egg Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ffffff 0%, #fff5f0 100%);
+            min-height: 100vh;
+            color: #333;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* Pokemon Background Elements */
+        .pokemon-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.15;
+        }
+        
+        .pokemon {
+            position: absolute;
+            font-size: 3rem;
+            animation: float 6s ease-in-out infinite;
+            filter: drop-shadow(2px 2px 4px rgba(255, 107, 53, 0.2));
+        }
+        
+        .pokemon:nth-child(1) { /* Pikachu */
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+        
+        .pokemon:nth-child(2) { /* Charizard */
+            top: 20%;
+            right: 10%;
+            animation-delay: 1.5s;
+        }
+        
+        .pokemon:nth-child(3) { /* Growlithe */
+            bottom: 30%;
+            left: 8%;
+            animation-delay: 3s;
+        }
+        
+        .pokemon:nth-child(4) { /* Psyduck */
+            top: 60%;
+            right: 15%;
+            animation-delay: 4.5s;
+        }
+        
+        .pokemon:nth-child(5) { /* Eevee */
+            bottom: 15%;
+            right: 5%;
+            animation-delay: 2s;
+        }
+        
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0px) rotate(0deg); 
+            }
+            33% { 
+                transform: translateY(-20px) rotate(2deg); 
+            }
+            66% { 
+                transform: translateY(10px) rotate(-1deg); 
+            }
+        }
+        
+        /* Enhanced timer completion animation */
+        .completion-celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .celebration-pokemon {
+            position: absolute;
+            font-size: 4rem;
+            animation: celebration-bounce 2s ease-out;
+        }
+        
+        @keyframes celebration-bounce {
+            0% { 
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% { 
+                transform: scale(1.2) rotate(180deg);
+                opacity: 1;
+            }
+            100% { 
+                transform: scale(1) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            color: #ff6b35;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(255, 107, 53, 0.1);
+        }
+        header p {
+            font-size: 1.1rem;
+            color: #666;
+        }
+        .egg-selector {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.1);
+            margin-bottom: 30px;
+        }
+        .egg-selector h2 {
+            text-align: center;
+            color: #ff6b35;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+        }
+        .egg-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .egg-btn {
+            background: white;
+            border: 3px solid #ff6b35;
+            border-radius: 15px;
+            padding: 20px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .egg-btn:hover {
+            background: #ff6b35;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+        }
+        .egg-btn.active {
+            background: #ff6b35;
+            color: white;
+        }
+        .egg-icon {
+            font-size: 2rem;
+        }
+        .egg-btn span {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .egg-btn small {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        .timer-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.1);
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .timer-display {
+            margin-bottom: 30px;
+        }
+        .time-circle {
+            width: 200px;
+            height: 200px;
+            border: 8px solid #ff6b35;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);
+        }
+        .time-text {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+        .egg-type {
+            font-size: 1rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b35, #ff8c42);
+            width: 0%;
+            transition: width 1s linear;
+        }
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .control-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .start {
+            background: #ff6b35;
+            color: white;
+        }
+        .start:hover {
+            background: #e55a2b;
+            transform: translateY(-2px);
+        }
+        .pause {
+            background: #ffa500;
+            color: white;
+        }
+        .pause:hover {
+            background: #e6940a;
+        }
+        .reset {
+            background: #f0f0f0;
+            color: #666;
+        }
+        .reset:hover {
+            background: #e0e0e0;
+        }
+        .instructions {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.1);
+        }
+        .instructions h3 {
+            color: #ff6b35;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        .instructions ol {
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        /* Easter Eggs */
+        .easter-egg {
+            position: absolute;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        .easter-egg:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+        #easterEgg1 {
+            top: 10px;
+            right: 20px;
+        }
+        #easterEgg2 {
+            bottom: 20px;
+            left: 20px;
+        }
+        #easterEgg3 {
+            top: 50%;
+            left: 10px;
+        }
+        /* Animations */
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+        .bounce {
+            animation: bounce 1s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+        /* Animal Playground */
+        .animal-playground {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 32px;
+            height: 70px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+        }
+        .animal {
+            font-size: 2.5rem;
+            transition: transform 0.3s;
+            filter: drop-shadow(0 2px 2px #ffedb8);
+        }
+        .animal-bunny.run {
+            animation: bunny-hop 1.2s infinite;
+        }
+        .animal-chick.run {
+            animation: chick-walk 1.2s infinite;
+        }
+        .animal-sheep.run {
+            animation: sheep-bounce 1.2s infinite;
+        }
+        .animal-pig.run {
+            animation: pig-roll 1.2s infinite;
+        }
+        @keyframes bunny-hop {
+            0%,100% { transform: translateY(0);}
+            20% { transform: translateY(-18px);}
+            40% { transform: translateY(0);}
+            60% { transform: translateY(-10px);}
+            80% { transform: translateY(0);}
+        }
+        @keyframes chick-walk {
+            0%,100% { transform: translateX(0);}
+            10% { transform: translateX(-8px);}
+            20% { transform: translateX(8px);}
+            30% { transform: translateX(-8px);}
+            40% { transform: translateX(8px);}
+            50% { transform: translateX(0);}
+        }
+        @keyframes sheep-bounce {
+            0%,100% { transform: translateY(0);}
+            25% { transform: translateY(-10px);}
+            50% { transform: translateY(0);}
+            75% { transform: translateY(-5px);}
+        }
+        @keyframes pig-roll {
+            0% { transform: rotate(0deg);}
+            20% { transform: rotate(15deg);}
+            40% { transform: rotate(-15deg);}
+            60% { transform: rotate(10deg);}
+            80% { transform: rotate(-10deg);}
+            100% { transform: rotate(0deg);}
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            header h1 {
+                font-size: 2rem;
+            }
+            .egg-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .time-circle {
+                width: 150px;
+                height: 150px;
+            }
+            .time-text {
+                font-size: 2rem;
+            }
+            .animal-playground {
+                gap: 12px;
+                height: 50px;
+            }
+            .animal {
+                font-size: 1.7rem;
+            }
+            .pokemon {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Pokemon Background -->
+    <div class="pokemon-background">
+        <div class="pokemon">⚡</div> <!-- Pikachu -->
+        <div class="pokemon">🔥</div> <!-- Charizard -->
+        <div class="pokemon">🐕</div> <!-- Growlithe -->
+        <div class="pokemon">🦆</div> <!-- Psyduck -->
+        <div class="pokemon">🦊</div> <!-- Eevee -->
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>🥚 Perfect Egg Timer</h1>
+            <p>Get your eggs cooked exactly how you like them!</p>
+        </header>
+        <div class="egg-selector">
+            <h2>Choose Your Egg Style</h2>
+            <div class="egg-options">
+                <button class="egg-btn" data-time="180" data-type="Dippy Eggs">
+                    <div class="egg-icon">🥚</div>
+                    <span>Dippy Eggs</span>
+                    <small>3 minutes</small>
+                </button>
+                <button class="egg-btn" data-time="240" data-type="Runny Yolk">
+                    <div class="egg-icon">🥚</div>
+                    <span>Runny Yolk</span>
+                    <small>4 minutes</small>
+                </button>
+                <button class="egg-btn" data-time="300" data-type="Medium Soft">
+                    <div class="egg-icon">🥚</div>
+                    <span>Medium Soft</span>
+                    <small>5 minutes</small>
+                </button>
+                <button class="egg-btn" data-time="360" data-type="Runny Center">
+                    <div class="egg-icon">🥚</div>
+                    <span>Runny Center</span>
+                    <small>6 minutes</small>
+                </button>
+                <button class="egg-btn" data-time="420" data-type="Jammy Yolk">
+                    <div class="egg-icon">🥚</div>
+                    <span>Jammy Yolk</span>
+                    <small>7 minutes</small>
+                </button>
+                <button class="egg-btn" data-time="480" data-type="Soft Boiled">
+                    <div class="egg-icon">🥚</div>
+                    <span>Soft Boiled</span>
+                    <small>8 minutes</small>
+                </button>
+                <button class="egg-btn" data-time="600" data-type="Hard Boiled">
+                    <div class="egg-icon">🥚</div>
+                    <span>Hard Boiled</span>
+                    <small>10 minutes</small>
+                </button>
+            </div>
+        </div>
+        <div class="timer-section" id="timerSection" style="display: none;">
+            <div class="timer-display">
+                <div class="time-circle">
+                    <div class="time-text" id="timeDisplay">00:00</div>
+                    <div class="egg-type" id="eggType"></div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            <!-- Animal Playground: Farm animals animated under the timer -->
+            <div class="animal-playground" id="animalPlayground">
+                <span class="animal animal-bunny" id="bunny" title="Bunny">🐰</span>
+                <span class="animal animal-chick" id="chick" title="Chick">🐥</span>
+                <span class="animal animal-sheep" id="sheep" title="Sheep">🐑</span>
+                <span class="animal animal-pig" id="pig" title="Piglet">🐷</span>
+            </div>
+            <div class="timer-controls">
+                <button id="startBtn" class="control-btn start">Start</button>
+                <button id="pauseBtn" class="control-btn pause" style="display: none;">Pause</button>
+                <button id="resetBtn" class="control-btn reset">Reset</button>
+            </div>
+        </div>
+        <div class="instructions">
+            <h3>Instructions</h3>
+            <ol>
+                <li>Bring water to a boil first</li>
+                <li>Gently lower fridge-cold eggs into the water</li>
+                <li>Select your preferred egg style above</li>
+                <li>Start the timer when eggs hit the water</li>
+                <li>Transfer to ice bath when timer finishes</li>
+            </ol>
+        </div>
+        <!-- Hidden Easter Eggs -->
+        <div class="easter-egg" id="easterEgg1" onclick="triggerEasterEgg1()">🐣</div>
+        <div class="easter-egg" id="easterEgg2" onclick="triggerEasterEgg2()">🐰</div>
+        <div class="easter-egg" id="easterEgg3" onclick="triggerEasterEgg3()">🌸</div>
+    </div>
+
+    <script>
+        class EggTimer {
+            constructor() {
+                this.totalTime = 0;
+                this.remainingTime = 0;
+                this.isRunning = false;
+                this.isPaused = false;
+                this.interval = null;
+                this.selectedEggType = '';
+                this.initializeElements();
+                this.bindEvents();
+                this.initializeAudio();
+            }
+            initializeElements() {
+                this.eggButtons = document.querySelectorAll('.egg-btn');
+                this.timerSection = document.getElementById('timerSection');
+                this.timeDisplay = document.getElementById('timeDisplay');
+                this.eggTypeDisplay = document.getElementById('eggType');
+                this.progressFill = document.getElementById('progressFill');
+                this.startBtn = document.getElementById('startBtn');
+                this.pauseBtn = document.getElementById('pauseBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                // Animal elements
+                this.animalBunny = document.getElementById('bunny');
+                this.animalChick = document.getElementById('chick');
+                this.animalSheep = document.getElementById('sheep');
+                this.animalPig = document.getElementById('pig');
+                this.animals = [
+                    this.animalBunny,
+                    this.animalChick,
+                    this.animalSheep,
+                    this.animalPig
+                ];
+            }
+            bindEvents() {
+                this.eggButtons.forEach(btn => {
+                    btn.addEventListener('click', () => this.selectEggType(btn));
+                });
+                this.startBtn.addEventListener('click', () => this.startTimer());
+                this.pauseBtn.addEventListener('click', () => this.pauseTimer());
+                this.resetBtn.addEventListener('click', () => this.resetTimer());
+            }
+            initializeAudio() {
+                // Create audio context for timer sounds
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            selectEggType(button) {
+                // Remove active class from all buttons
+                this.eggButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to selected button
+                button.classList.add('active');
+                button.classList.add('bounce');
+                // Remove bounce animation after completion
+                setTimeout(() => button.classList.remove('bounce'), 1000);
+                // Set timer values
+                this.totalTime = parseInt(button.dataset.time);
+                this.remainingTime = this.totalTime;
+                this.selectedEggType = button.dataset.type;
+                // Show timer section
+                this.timerSection.style.display = 'block';
+                this.timerSection.scrollIntoView({ behavior: 'smooth' });
+                // Update display
+                this.updateDisplay();
+                this.eggTypeDisplay.textContent = this.selectedEggType;
+                // Reset timer state
+                this.resetTimer();
+            }
+            startTimer() {
+                if (this.remainingTime <= 0) return;
+                this.isRunning = true;
+                this.isPaused = false;
+                this.startBtn.style.display = 'none';
+                this.pauseBtn.style.display = 'inline-block';
+                // Start animal animations
+                this.toggleAnimalAnimation(true);
+                this.interval = setInterval(() => {
+                    this.remainingTime--;
+                    this.updateDisplay();
+                    this.updateProgress();
+                    if (this.remainingTime <= 0) {
+                        this.completeTimer();
+                    }
+                }, 1000);
+            }
+            pauseTimer() {
+                this.isRunning = false;
+                this.isPaused = true;
+                clearInterval(this.interval);
+                this.startBtn.style.display = 'inline-block';
+                this.pauseBtn.style.display = 'none';
+                this.startBtn.textContent = 'Resume';
+                // Pause animal animations
+                this.toggleAnimalAnimation(false);
+            }
+            resetTimer() {
+                this.isRunning = false;
+                this.isPaused = false;
+                clearInterval(this.interval);
+                this.remainingTime = this.totalTime;
+                this.startBtn.style.display = 'inline-block';
+                this.pauseBtn.style.display = 'none';
+                this.startBtn.textContent = 'Start';
+                this.updateDisplay();
+                this.updateProgress();
+                // Pause animal animations
+                this.toggleAnimalAnimation(false);
+            }
+            updateDisplay() {
+                const minutes = Math.floor(this.remainingTime / 60);
+                const seconds = this.remainingTime % 60;
+                this.timeDisplay.textContent =
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            updateProgress() {
+                const progress = ((this.totalTime - this.remainingTime) / this.totalTime) * 100;
+                this.progressFill.style.width = `${progress}%`;
+            }
+            completeTimer() {
+                this.isRunning = false;
+                clearInterval(this.interval);
+                // Show completion
+                this.timeDisplay.textContent = '00:00';
+                this.timeDisplay.classList.add('pulse');
+                // Play completion sound
+                this.playCompletionSound();
+                // Show notification
+                this.showNotification();
+                // Reset buttons
+                this.startBtn.style.display = 'inline-block';
+                this.pauseBtn.style.display = 'none';
+                this.startBtn.textContent = 'Start';
+                // Pause animal animations
+                this.toggleAnimalAnimation(false);
+                // Trigger celebration Easter egg
+                this.triggerCelebration();
+            }
+            playCompletionSound() {
+                // Create a cute chime sound using multiple tones
+                const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 - happy chord
+                frequencies.forEach((freq, index) => {
+                    setTimeout(() => {
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+                        oscillator.type = 'sine';
+                        
+                        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
+                        
+                        oscillator.start(this.audioContext.currentTime);
+                        oscillator.stop(this.audioContext.currentTime + 0.8);
+                    }, index * 150);
+                });
+            }
+            showNotification() {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('🥚 Egg Timer Complete!', {
+                        body: `Your ${this.selectedEggType} eggs are ready!`,
+                        icon: '🥚'
+                    });
+                } else if ('Notification' in window && Notification.permission !== 'denied') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            new Notification('🥚 Egg Timer Complete!', {
+                                body: `Your ${this.selectedEggType} eggs are ready!`,
+                                icon: '🥚'
+                            });
+                        }
+                    });
+                }
+                // Fallback alert
+                alert(`🥚 Time's up! Your ${this.selectedEggType} eggs are ready!`);
+            }
+            triggerCelebration() {
+                // Add Pokemon celebration animation
+                const pokemonCelebration = ['⚡', '🔥', '🐕', '🦆', '🦊'];
+                const celebrationDiv = document.createElement('div');
+                celebrationDiv.className = 'completion-celebration';
+                
+                pokemonCelebration.forEach((pokemon, index) => {
+                    const pokemonElement = document.createElement('div');
+                    pokemonElement.className = 'celebration-pokemon';
+                    pokemonElement.textContent = pokemon;
+                    pokemonElement.style.left = `${20 + index * 15}%`;
+                    pokemonElement.style.top = `${30 + Math.random() * 40}%`;
+                    celebrationDiv.appendChild(pokemonElement);
+                });
+                
+                document.body.appendChild(celebrationDiv);
+                
+                // Add celebration animation to the page
+                const celebration = document.createElement('div');
+                celebration.innerHTML = '🎉🥚🎉🥚🎉';
+                celebration.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    font-size: 3rem;
+                    z-index: 1000;
+                    animation: bounce 2s;
+                    pointer-events: none;
+                `;
+                document.body.appendChild(celebration);
+                
+                setTimeout(() => {
+                    if (celebrationDiv.parentNode) {
+                        document.body.removeChild(celebrationDiv);
+                    }
+                    if (celebration.parentNode) {
+                        document.body.removeChild(celebration);
+                    }
+                    this.timeDisplay.classList.remove('pulse');
+                }, 2000);
+            }
+            toggleAnimalAnimation(isRunning) {
+                this.animals.forEach(animal => {
+                    if (!animal) return;
+                    if (isRunning) {
+                        animal.classList.add('run');
+                    } else {
+                        animal.classList.remove('run');
+                    }
+                });
+            }
+        }
+        // Easter Egg Functions
+        function triggerEasterEgg1() {
+            const egg = document.getElementById('easterEgg1');
+            egg.classList.add('bounce');
+            // Change all egg icons temporarily
+            document.querySelectorAll('.egg-icon').forEach(icon => {
+                const originalText = icon.textContent;
+                icon.textContent = '🐣';
+                setTimeout(() => icon.textContent = originalText, 2000);
+            });
+            setTimeout(() => egg.classList.remove('bounce'), 1000);
+        }
+        function triggerEasterEgg2() {
+            const egg = document.getElementById('easterEgg2');
+            egg.classList.add('shake');
+            // Add bunny ears to the timer circle
+            const timerCircle = document.querySelector('.time-circle');
+            if (!timerCircle) return;
+            const ears = document.createElement('div');
+            ears.innerHTML = '👂👂';
+            ears.style.cssText = `
+                position: absolute;
+                top: -20px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 2rem;
+            `;
+            timerCircle.style.position = 'relative';
+            timerCircle.appendChild(ears);
+            setTimeout(() => {
+                egg.classList.remove('shake');
+                if (ears.parentNode) {
+                    timerCircle.removeChild(ears);
+                }
+            }, 3000);
+        }
+        function triggerEasterEgg3() {
+            const egg = document.getElementById('easterEgg3');
+            egg.classList.add('pulse');
+            // Create floating flowers
+            for (let i = 0; i < 5; i++) {
+                const flower = document.createElement('div');
+                flower.innerHTML = '🌸';
+                flower.style.cssText = `
+                    position: fixed;
+                    font-size: 2rem;
+                    pointer-events: none;
+                    z-index: 999;
+                    left: ${Math.random() * window.innerWidth}px;
+                    top: ${Math.random() * window.innerHeight}px;
+                    animation: bounce 3s infinite;
+                `;
+                document.body.appendChild(flower);
+                setTimeout(() => {
+                    if (flower.parentNode) {
+                        document.body.removeChild(flower);
+                    }
+                }, 3000);
+            }
+            setTimeout(() => egg.classList.remove('pulse'), 3000);
+        }
+        // Initialize the timer when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new EggTimer();
+            // Request notification permission on load
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        });
+    </script>
+</body>
+</html>
